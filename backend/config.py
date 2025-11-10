@@ -59,8 +59,13 @@ class Settings:
 # single settings instance
 settings = Settings()
 
+# Compatibility aliases expected by some backend modules
+# Keep these minimal so older modules that expect BASE_DIR / EXTRACTED_DIR continue to work.
+settings.BASE_DIR = Path(__file__).resolve().parents[1]
+settings.EXTRACTED_DIR = _path_from_env("EXTRACTED_DIR", Path.cwd() / "data" / "extracted")
+
 # Ensure directories exist
-for path in (settings.BASE_DATA_DIR, settings.UPLOADS_DIR, settings.SCANS_DIR, settings.TESTS_DIR, settings.MODELS_DIR):
+for path in (settings.BASE_DATA_DIR, settings.UPLOADS_DIR, settings.SCANS_DIR, settings.TESTS_DIR, settings.MODELS_DIR, settings.EXTRACTED_DIR):
     try:
         Path(path).mkdir(parents=True, exist_ok=True)
     except Exception:

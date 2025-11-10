@@ -1,0 +1,22 @@
+{
+  "job_id": "aec182809f27",
+  "scanned_at": "2025-11-09T17:40:17.855531",
+  "scanned_path": "data\\uploads\\20251109_231005_17e9153d_mern_demo_extracted\\mern_demo",
+  "detected_frameworks": [],
+  "backend_endpoints": [],
+  "frontend_calls": [],
+  "notes": [
+    "Using nested project root: data\\uploads\\20251109_231005_17e9153d_mern_demo_extracted\\mern_demo",
+    "Entry file candidates: app.js",
+    "No backend endpoints or frontend calls detected. Consider checking nested folders or use a simple server file (server.js/app.js/index.js) in project root or backend/ folder."
+  ],
+  "file_count": 3,
+  "sample_openapi": {
+    "openapi": "3.0.0",
+    "info": {
+      "title": "synthesized-api",
+      "version": "0.1.0"
+    },
+    "paths": {}
+  }
+}

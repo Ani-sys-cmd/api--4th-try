@@ -1,22 +1,19 @@
 # backend/gemini_client.py
 """
-Simple Gemini API wrapper.
+Robust Gemini API wrapper (based on google-generativeai).
 
-This module tries to use the `google-generativeai` package if installed.
-It provides:
-  - GeminiClient.generate_text(prompt, **kwargs)
-  - GeminiClient.embed_texts(list_of_texts)
-
-Notes:
-  - Make sure GEMINI_API_KEY is set in your environment (or .env).
-  - If the `google-generativeai` package is not installed or no API key is provided,
-    the client will raise a clear error explaining how to fix it.
-  - You can extend this wrapper (streaming support, chat, retry/backoff, etc.)
-    as needed for your project.
+Features / behavior:
+- Reads GEMINI_API_KEY from config.settings (or environment via settings).
+- Uses google-generativeai if installed. Handles multiple client method shapes.
+- generate_text(...) returns {"content": str, "raw": <raw_response>} for easy consumption.
+- embed_texts(list_of_texts, model=...) returns List[List[float]].
+- Raises GeminiClientError with clear instructions when dependencies or keys are missing.
 """
 
-import os
 from typing import List, Dict, Any, Optional
+import os
+
+from config import settings
 
 try:
     import google.generativeai as genai  # type: ignore
@@ -24,8 +21,6 @@ try:
 except Exception:
     genai = None  # type: ignore
     _HAS_GENAI = False
-
-from config import settings
 
 
 class GeminiClientError(RuntimeError):
@@ -38,25 +33,26 @@ class GeminiClient:
         Initialize the Gemini client wrapper.
 
         :param api_key: Gemini API key. If None, tries to read from settings.GEMINI_API_KEY.
-        :param model: Default model to call (Gemini text model name). Keep as-is or override.
+        :param model: Default model to call (Gemini text model name).
         """
-        self.api_key = api_key or settings.GEMINI_API_KEY
+        self.api_key = api_key or getattr(settings, "GEMINI_API_KEY", None) or os.environ.get("GEMINI_API_KEY")
         self.model = model
 
         if not self.api_key:
             raise GeminiClientError(
-                "Gemini API key not found. Set GEMINI_API_KEY in your environment or .env."
+                "Gemini API key not found. Set GEMINI_API_KEY in your environment or .env (project root)."
             )
 
         if not _HAS_GENAI:
             raise GeminiClientError(
                 "google-generativeai package not installed. Install it with:\n\n"
                 "    pip install google-generativeai\n\n"
-                "Or, if you prefer, implement an alternative wrapper here."
+                "Or implement an alternative adapter in backend/gemini_client.py."
             )
 
         # configure client (google-generativeai uses genai.configure)
         try:
+            # Some versions require genai.configure(api_key=...), some may accept environment-based auth.
             genai.configure(api_key=self.api_key)
         except Exception as exc:
             raise GeminiClientError(f"Failed to configure google-generativeai client: {exc}")
@@ -72,72 +68,144 @@ class GeminiClient:
         **extra_kwargs,
     ) -> Dict[str, Any]:
         """
-        Generate text from Gemini.
-
-        Returns the raw response dict from the google.generativeai client.
+        Generate text from Gemini and return standardized dict:
+            {"content": <string>, "raw": <raw_response_object>}
+        The shape of `raw` depends on the installed google-generativeai version.
 
         :param prompt: The input prompt (string).
         :param temperature: sampling temperature.
         :param max_output_tokens: maximum tokens to generate.
-        :param top_k: optional top_k sampling.
-        :param top_p: optional top_p sampling.
-        :param safety_settings: optional safety settings per Google API.
         :param extra_kwargs: forwarded to underlying client call.
         """
         try:
-            # The google-generativeai library exposes a generate_text helper.
-            # Using the "model" identifier (e.g., "models/text-bison-001" or "models/chat-bison-001").
-            response = genai.generate_text(
-                model=self.model,
-                prompt=prompt,
-                temperature=temperature,
-                max_output_tokens=max_output_tokens,
-                top_k=top_k,
-                top_p=top_p,
-                safety_settings=safety_settings,
-                **extra_kwargs,
-            )
-            return response
+            # Preferred modern helper: genai.generate_text(...)
+            if hasattr(genai, "generate_text"):
+                resp = genai.generate_text(
+                    model=self.model,
+                    prompt=prompt,
+                    temperature=temperature,
+                    max_output_tokens=max_output_tokens,
+                    top_k=top_k,
+                    top_p=top_p,
+                    safety_settings=safety_settings,
+                    **extra_kwargs,
+                )
+                # try to extract text in several possible shapes
+                content = None
+                # 1) resp may be an object with .text
+                if hasattr(resp, "text"):
+                    content = resp.text
+                # 2) resp may be dict-like with 'content' or 'candidates' or 'output'
+                elif isinstance(resp, dict):
+                    # common fields
+                    if "content" in resp and isinstance(resp["content"], str):
+                        content = resp["content"]
+                    elif "candidates" in resp and isinstance(resp["candidates"], list) and resp["candidates"]:
+                        first = resp["candidates"][0]
+                        if isinstance(first, dict) and "content" in first:
+                            content = first["content"]
+                        elif isinstance(first, str):
+                            content = first
+                    elif "output" in resp:
+                        # some responses nest output
+                        output = resp["output"]
+                        if isinstance(output, str):
+                            content = output
+                        elif isinstance(output, dict) and "content" in output:
+                            content = output["content"]
+                # 3) fallback: try str(resp)
+                if content is None:
+                    content = str(resp)
+
+                return {"content": content, "raw": resp}
+            # Older / alternative API: genai.text.generate(...)
+            elif hasattr(genai, "text") and hasattr(genai.text, "generate"):
+                resp = genai.text.generate(
+                    model=self.model,
+                    input=prompt,
+                    temperature=temperature,
+                    max_output_tokens=max_output_tokens,
+                    **extra_kwargs,
+                )
+                # common shape: resp.result or resp.output[0].content
+                content = None
+                if hasattr(resp, "result") and hasattr(resp.result, "output"):
+                    try:
+                        content = resp.result.output[0].content
+                    except Exception:
+                        content = str(resp)
+                elif isinstance(resp, dict) and "candidates" in resp:
+                    c = resp["candidates"][0]
+                    content = c.get("content") if isinstance(c, dict) else str(c)
+                else:
+                    content = str(resp)
+                return {"content": content, "raw": resp}
+            else:
+                raise GeminiClientError("Installed google-generativeai client does not expose a supported text-generation API.")
         except Exception as exc:
-            # surface a friendly error
             raise GeminiClientError(f"Gemini text generation failed: {exc}")
 
     def embed_texts(self, texts: List[str], model: str = "embed-text-v1") -> List[List[float]]:
         """
-        Create embeddings for a list of texts.
-
-        Note: Depending on the google-generativeai version and your account, embedding
-        APIs and model names may differ. If your account uses a different path, update the model param.
-
-        :param texts: list of strings to embed
-        :param model: embedding model name (default "embed-text-v1")
-        :return: list of embedding vectors (list of floats)
+        Create embeddings for a list of texts and return a list of vectors.
+        Handles a few variants of the google-generativeai client API.
         """
+        if not isinstance(texts, list):
+            raise GeminiClientError("embed_texts expects a list of strings.")
+
         try:
-            # The exact call for embeddings may differ by version.
-            # google-generativeai typically provides an embeddings API via genai.generate_embeddings or similar.
-            if hasattr(genai, "embeddings"):
-                # newer client style: genai.embeddings.create(...)
+            # Modern style: genai.embeddings.create(...)
+            if hasattr(genai, "embeddings") and hasattr(genai.embeddings, "create"):
                 resp = genai.embeddings.create(model=model, input=texts)
-                # expected format: resp.data is a list of {embedding: [...]}
-                embeddings = [item["embedding"] for item in resp["data"]]
+                # resp.data is typically a list of dicts like {"embedding": [...]}
+                embeddings = []
+                # support dict-like or object-like resp
+                data = None
+                if isinstance(resp, dict) and "data" in resp:
+                    data = resp["data"]
+                elif hasattr(resp, "data"):
+                    data = getattr(resp, "data")
+                else:
+                    data = None
+
+                if data is None:
+                    # try alternative shapes
+                    raise GeminiClientError("Unexpected embeddings response shape from google-generativeai.")
+
+                for item in data:
+                    # item may be dict or object; try dict access then attribute access
+                    if isinstance(item, dict):
+                        vec = item.get("embedding") or item.get("embedding_vector") or item.get("vector")
+                    else:
+                        vec = getattr(item, "embedding", None) or getattr(item, "vector", None)
+                    if vec is None:
+                        raise GeminiClientError("Embedding item missing 'embedding' field in response.")
+                    embeddings.append([float(x) for x in vec])
                 return embeddings
+
+            # Alternate older API: genai.generate_embeddings(...)
             elif hasattr(genai, "generate_embeddings"):
-                # fall back if method name differs
                 resp = genai.generate_embeddings(model=model, input=texts)
-                embeddings = [item["embedding"] for item in resp["data"]]
+                # try dict/object shapes
+                data = resp.get("data") if isinstance(resp, dict) else getattr(resp, "data", None)
+                embeddings = []
+                for item in data:
+                    vec = item.get("embedding") if isinstance(item, dict) else getattr(item, "embedding", None)
+                    embeddings.append([float(x) for x in vec])
                 return embeddings
-            else:
-                # Try a generic generate_text-based fallback (not ideal)
-                raise GeminiClientError(
-                    "Installed google-generativeai client does not expose a known embeddings API. "
-                    "Check package version or implement an embedding fallback (e.g., sentence-transformers)."
-                )
+
+            # If nothing is available, raise informative error
+            raise GeminiClientError(
+                "Installed google-generativeai client does not expose an embeddings API compatible with this wrapper. "
+                "Check package version or adapt backend/gemini_client.py for your client."
+            )
+        except GeminiClientError:
+            raise
         except Exception as exc:
             raise GeminiClientError(f"Gemini embedding request failed: {exc}")
 
 
-# Helper factory to get a configured client easily
+# singleton factory
 _gemini_client: Optional[GeminiClient] = None
 
 
