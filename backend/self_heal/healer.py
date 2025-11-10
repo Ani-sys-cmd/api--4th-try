@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
-from config import settings
-from gemini_client import get_gemini_client, GeminiClientError
+from backend.config import settings
+from backend.gemini_client import get_gemini_client, GeminiClientError
 
 # utility to locate job file
 def _job_file(job_id: str) -> Path:
@@ -341,3 +341,4 @@ def heal_job(job_id: str) -> Dict[str, Any]:
     _write_job(job_id, job)
 
     return {"job_id": job_id, "healed": True, "healed_collection": str(healed_path), "repairs": repairs}
+

@@ -2,7 +2,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from config import settings
+from backend.config import settings
 
 # SQLAlchemy setup
 DATABASE_URL = settings.DATABASE_URL
@@ -27,3 +27,4 @@ def get_db():
         yield db
     finally:
         db.close()
+

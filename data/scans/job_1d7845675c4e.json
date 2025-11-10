@@ -1,0 +1,22 @@
+{
+  "job_id": "1d7845675c4e",
+  "project_name": "https://github.com/alokyadav1/mern-todo-app",
+  "created_at": "2025-11-10T12:49:52.439747",
+  "status": "heal_failed",
+  "source": "git",
+  "file_name": null,
+  "git_url": "https://github.com/alokyadav1/mern-todo-app",
+  "note": "git clone scheduled in scanner step; scanner will clone and process the repo.",
+  "scan_started_at": "2025-11-10T12:49:54.211136",
+  "scan_completed_at": "2025-11-10T12:49:57.326567",
+  "scan_report_path": "data\\scans\\scan_report_1d7845675c4e.json",
+  "tests_dir": "data\\tests\\1d7845675c4e",
+  "openapi_artifact": "data\\tests\\1d7845675c4e\\openapi_enriched.json",
+  "collection_path": "data\\tests\\1d7845675c4e\\collection.json",
+  "tests_generated_at": "2025-11-10T12:49:58.873325",
+  "tests_error": "Test runner not available. Ensure backend.test_executor.test_runner exists.",
+  "tests_started_at": "2025-11-10T12:50:05.180990",
+  "healing_started_at": "2025-11-10T12:50:06.987944",
+  "heal_error": "'\"key\"'",
+  "healing_completed_at": "2025-11-10T12:50:07.061172"
+}

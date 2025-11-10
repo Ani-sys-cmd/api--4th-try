@@ -5,12 +5,12 @@ import json
 from datetime import datetime
 from typing import Dict, Any
 
-from config import settings
-from storage.file_manager import file_manager
+from backend.config import settings
+from backend.storage.file_manager import file_manager
 
 # scanner implementation is expected in scanner.project_scanner
 try:
-    from scanner.project_scanner import scan_project  # function to run the static analysis
+    from backend.scanner.project_scanner import scan_project  # function to run the static analysis
 except Exception:
     # postpone import error until runtime; provide helpful message in endpoint
     scan_project = None
@@ -133,3 +133,4 @@ def fetch_scan_report(job_id: str):
         return {"job_id": job_id, "report": report}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to read scan report: {exc}")
+

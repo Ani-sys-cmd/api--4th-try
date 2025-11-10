@@ -14,8 +14,8 @@ from sqlalchemy import Column, Integer, String, DateTime, Text, JSON
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from database import Base, SessionLocal  # uses the database.py module in backend
-from config import settings
+from backend.database import Base, SessionLocal  # uses the database.py module in backend
+from backend.config import settings
 
 
 class Job(Base):
@@ -156,3 +156,4 @@ def update_job_fields(session: Optional[Session], job_id: str, updates: Dict[str
     finally:
         if own_session:
             session.close()
+

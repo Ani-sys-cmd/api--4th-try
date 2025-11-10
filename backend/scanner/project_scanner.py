@@ -17,7 +17,7 @@ import shutil
 import json
 from pathlib import Path
 from typing import Dict, Any, List, Optional
-from config import settings
+from backend.config import settings
 
 # regexes for basic detection
 EXPRESS_ROUTE_RE = re.compile(
@@ -261,3 +261,4 @@ def scan_project(path_or_url: str, job_id: Optional[str] = None) -> Dict[str, An
         report["notes"].append("No backend endpoints or frontend calls detected. Consider checking nested folders or use a simple server file (server.js/app.js/index.js) in project root or backend/ folder.")
 
     return report
+

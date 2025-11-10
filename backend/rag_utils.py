@@ -25,11 +25,11 @@ from typing import List, Dict, Any, Optional, Tuple
 
 import numpy as np
 
-from config import settings
+from backend.config import settings
 
 # Try to use gemini_client embeddings
 try:
-    from gemini_client import get_gemini_client, GeminiClientError  # type: ignore
+    from backend.gemini_client import get_gemini_client, GeminiClientError  # type: ignore
     _HAS_GEMINI_EMBED = True
 except Exception:
     _HAS_GEMINI_EMBED = False
@@ -276,3 +276,4 @@ class RAGStore:
     def list_docs(self) -> List[Dict[str, Any]]:
         """Return stored metadata list (id, meta)"""
         return [{"id": md["id"], "meta": md.get("meta", {})} for md in self._metadatas]
+

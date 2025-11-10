@@ -14,7 +14,7 @@ import zipfile
 from fastapi import UploadFile, HTTPException
 from pathlib import Path
 from datetime import datetime
-from config import settings
+from backend.config import settings
 
 
 class FileManager:
@@ -85,3 +85,4 @@ class FileManager:
 
 # Shared instance
 file_manager = FileManager()
+

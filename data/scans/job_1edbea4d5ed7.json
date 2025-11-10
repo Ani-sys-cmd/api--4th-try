@@ -1,0 +1,19 @@
+{
+  "job_id": "1edbea4d5ed7",
+  "project_name": "https://github.com/alokyadav1/mern-todo-app",
+  "created_at": "2025-11-10T13:16:30.246242",
+  "status": "tests_generated",
+  "source": "git",
+  "file_name": null,
+  "git_url": "https://github.com/alokyadav1/mern-todo-app",
+  "note": "git clone scheduled in scanner step; scanner will clone and process the repo.",
+  "scan_started_at": "2025-11-10T13:17:03.624988",
+  "tests_dir": "data\\tests\\1edbea4d5ed7",
+  "openapi_artifact": "data\\tests\\1edbea4d5ed7\\openapi_enriched.json",
+  "collection_path": "data\\tests\\1edbea4d5ed7\\collection.json",
+  "tests_generated_at": "2025-11-10T13:17:05.849428",
+  "scan_completed_at": "2025-11-10T13:16:36.008696",
+  "scan_report_path": "data\\scans\\scan_report_1edbea4d5ed7.json",
+  "scan_error": "Failed to clone repo: git clone failed: fatal: destination path 'data\\uploads\\1edbea4d5ed7_clone' already exists and is not an empty directory.\n",
+  "scan_failed_at": "2025-11-10T13:17:03.768376"
+}

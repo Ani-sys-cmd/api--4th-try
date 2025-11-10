@@ -34,7 +34,7 @@ from pathlib import Path
 
 import numpy as np
 
-from config import settings
+from backend.config import settings
 from ..test_executor.test_runner import execute_tests_for_job  # used by example evaluator
 from ..utils.logger import get_logger
 
@@ -464,3 +464,4 @@ class HybridTrainer:
         except Exception as exc:
             logger.exception("Default evaluator failed")
             return {"coverage": 0.0, "failures": 1, "duration": time.time() - start}
+

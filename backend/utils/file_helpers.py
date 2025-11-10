@@ -20,7 +20,7 @@ import zipfile
 import hashlib
 from pathlib import Path
 from typing import List, Iterator, Optional
-from utils.logger import get_logger
+from backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -105,3 +105,4 @@ def compute_sha1(file_path: str) -> str:
         for chunk in iter(lambda: f.read(8192), b""):
             sha1.update(chunk)
     return sha1.hexdigest()
+

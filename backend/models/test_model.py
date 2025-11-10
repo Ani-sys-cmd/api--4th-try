@@ -16,8 +16,8 @@ from sqlalchemy import Column, Integer, String, DateTime, JSON, ForeignKey, Text
 from sqlalchemy.orm import Session, relationship
 from sqlalchemy.exc import SQLAlchemyError
 
-from database import Base, SessionLocal
-from config import settings
+from backend.database import Base, SessionLocal
+from backend.config import settings
 
 
 class TestResult(Base):
@@ -143,3 +143,4 @@ def update_result_status(session: Optional[Session], run_id: str, updates: Dict[
     finally:
         if own_session:
             session.close()
+

@@ -5,11 +5,11 @@ from typing import Dict, Any
 from datetime import datetime
 import json
 
-from config import settings
+from backend.config import settings
 
 # healer import (may raise if module missing)
 try:
-    from self_heal.healer import heal_job
+    from backend.self_heal.healer import heal_job
 except Exception:
     heal_job = None
 
@@ -92,3 +92,4 @@ def heal_status(job_id: str):
         "self_heal": heal_meta,
         "last_heal_result": last_result,
     }
+

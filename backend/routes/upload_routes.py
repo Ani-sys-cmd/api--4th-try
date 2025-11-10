@@ -5,8 +5,8 @@ from pathlib import Path
 import json
 from datetime import datetime
 
-from storage.file_manager import file_manager
-from config import settings
+from backend.storage.file_manager import file_manager
+from backend.config import settings
 
 router = APIRouter(tags=["upload"])
 
@@ -98,3 +98,4 @@ async def upload_project(
         _write_job_record(job_id, record)
 
     return {"job_id": job_id, "status": record["status"], "message": "Upload accepted. Poll /api/scan-status/{job_id} for updates."}
+

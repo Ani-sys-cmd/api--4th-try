@@ -1,144 +1,369 @@
-# backend/test_executor/test_runner.py
+# backend/routes/test_routes.py
 """
-Unified test runner used by routes and workers.
+Test-related routes: generate tests, run tests, fetch test results,
+and lightweight RL metrics endpoints.
 
-- Prefer running Postman collections with Newman via newman_adapter.run_collection.
-- If pytest-style tests are present, run pytest and capture output.
-- Writes a summary JSON into settings.TESTS_DIR/test_run_{job_id}.json.
-
-This file is intentionally small and local-first.
+This version:
+ - attempts safe imports for synthesizer and test runner
+ - prefers execute_tests_for_job if present, otherwise falls back to run_tests_auto
+ - preserves generate-tests, run-tests, test-result behavior
+ - adds rl-metrics GET (placeholder) and POST (dev helper)
+ - logs stacktraces and updates job records on errors
 """
 
-import json
-import subprocess
-import shlex
-import time
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Dict, Any, Optional, Callable
+from datetime import datetime
+import json
+import traceback
+import os
 
-from config import settings
-from utils.logger import get_logger
-from .newman_adapter import run_collection, NewmanError
+# Import settings using local import style used by the backend
+try:
+    from config import settings
+except Exception:
+    from backend.config import settings  # type: ignore
+
+# logger helper - try both import styles used in repo
+try:
+    from utils.logger import get_logger
+except Exception:
+    try:
+        from backend.utils.logger import get_logger  # type: ignore
+    except Exception:
+        import logging
+        logging.basicConfig(level=logging.INFO)
+        def get_logger(name):
+            return logging.getLogger(name)
 
 logger = get_logger(__name__)
 
-
-def _write_summary(job_id: str, data: Dict[str, Any]) -> Path:
-    out_dir = Path(settings.TESTS_DIR)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"test_run_{job_id}.json"
-    out_path.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
-    return out_path
-
-
-def run_newman_for_job(collection_path: str, job_id: str, environment: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Run a Postman collection via the newman_adapter and produce a friendly summary.
-    """
-    start = time.time()
+# Attempt to import synthesizer (try both module paths)
+synthesize_openapi: Optional[Callable[[Dict[str, Any], Optional[str]], Dict[str, Any]]] = None
+for synth_path in ("openapi_synthesizer", "backend.openapi_synthesizer"):
     try:
-        result = run_collection(collection_path, job_id, environment_path=environment)
-        summary = {
-            "job_id": job_id,
-            "runner": "newman",
-            "exit_code": result.get("exit_code"),
-            "report_path": result.get("report_path"),
-            "summary": result.get("summary"),
-            "stdout": result.get("stdout"),
-            "stderr": result.get("stderr"),
-            "duration": result.get("duration_seconds", time.time() - start),
-            "ran_at": result.get("ran_at"),
-        }
-    except NewmanError as exc:
-        logger.error("Newman run failed: %s", exc)
-        summary = {"job_id": job_id, "runner": "newman", "error": str(exc), "exit_code": -1, "duration": time.time() - start}
-    except Exception as exc:
-        logger.exception("Unexpected error running newman")
-        summary = {"job_id": job_id, "runner": "newman", "error": str(exc), "exit_code": -2, "duration": time.time() - start}
-
-    _write_summary(job_id, summary)
-    return summary
-
-
-def run_pytest_for_dir(tests_dir: str, job_id: str, additional_args: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Run pytest over a directory and capture the output.
-    """
-    start = time.time()
-    out_dir = Path(settings.TESTS_DIR)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    log_path = out_dir / f"pytest_{job_id}.log"
-
-    cmd = ["pytest", str(tests_dir), "-q", "--disable-warnings", "--maxfail=1"]
-    if additional_args:
-        cmd += shlex.split(additional_args)
-
-    try:
-        with open(log_path, "w", encoding="utf-8") as lf:
-            proc = subprocess.run(cmd, stdout=lf, stderr=subprocess.STDOUT, text=True, timeout=1800)
-        exit_code = proc.returncode
-    except FileNotFoundError:
-        msg = "pytest not installed or not found on PATH"
-        logger.error(msg)
-        summary = {"job_id": job_id, "runner": "pytest", "error": msg, "exit_code": -1, "duration": time.time() - start}
-        _write_summary(job_id, summary)
-        return summary
-    except subprocess.TimeoutExpired as exc:
-        logger.error("pytest timed out: %s", exc)
-        summary = {"job_id": job_id, "runner": "pytest", "error": "timeout", "exit_code": -1, "duration": time.time() - start}
-        _write_summary(job_id, summary)
-        return summary
-    except Exception as exc:
-        logger.exception("Unexpected pytest error")
-        summary = {"job_id": job_id, "runner": "pytest", "error": str(exc), "exit_code": -2, "duration": time.time() - start}
-        _write_summary(job_id, summary)
-        return summary
-
-    # read a snippet of the log
-    try:
-        text = log_path.read_text(encoding="utf-8")
+        mod = __import__(synth_path, fromlist=["synthesize_openapi"])
+        synth_fn = getattr(mod, "synthesize_openapi", None)
+        if callable(synth_fn):
+            synthesize_openapi = synth_fn
+            logger.info("Loaded synthesize_openapi from %s", synth_path)
+            break
     except Exception:
-        text = ""
+        logger.debug("Could not import %s (will skip LLM synthesis if missing).", synth_path)
 
-    summary = {
+# Attempt to import test runner (try both module paths); pick preferred function
+runner_fn: Optional[Callable[[str, str], Dict[str, Any]]] = None
+runner_source: Optional[str] = None
+for runner_path in ("test_executor.test_runner", "backend.test_executor.test_runner"):
+    try:
+        mod = __import__(runner_path, fromlist=["execute_tests_for_job", "run_tests_auto"])
+        # try preferred symbol first
+        exec_fn = getattr(mod, "execute_tests_for_job", None)
+        auto_fn = getattr(mod, "run_tests_auto", None)
+        if callable(exec_fn):
+            runner_fn = exec_fn
+            runner_source = f"{runner_path}.execute_tests_for_job"
+            logger.info("Using test runner function %s", runner_source)
+            break
+        if callable(auto_fn):
+            runner_fn = auto_fn
+            runner_source = f"{runner_path}.run_tests_auto"
+            logger.info("Using test runner function %s", runner_source)
+            break
+    except Exception:
+        logger.debug("Could not import %s (test runner may be missing).", runner_path)
+
+router = APIRouter(tags=["tests"])
+
+
+# -------------------------
+# Helpers for job persistence
+# -------------------------
+def _job_file_path(job_id: str) -> Path:
+    return Path(settings.SCANS_DIR) / f"job_{job_id}.json"
+
+
+def _read_job(job_id: str) -> Dict[str, Any]:
+    job_file = _job_file_path(job_id)
+    if not job_file.exists():
+        raise HTTPException(status_code=404, detail="Job not found.")
+    try:
+        return json.loads(job_file.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to read job file: {exc}")
+
+
+def _write_job(job_id: str, data: Dict[str, Any]):
+    job_file = _job_file_path(job_id)
+    job_file.write_text(json.dumps(data, default=str, indent=2), encoding="utf-8")
+
+
+# -------------------------
+# RL metrics helpers
+# -------------------------
+def save_rl_metrics(job_id: str, metrics: Dict[str, Any]):
+    """
+    Persist RL metrics for a job in two places:
+      - inside the job JSON under "rl_metrics"
+      - as a standalone file under settings.TESTS_DIR (rl_metrics_<job_id>.json)
+    Safe to call from background tasks.
+    """
+    tests_dir = Path(settings.TESTS_DIR)
+    try:
+        tests_dir.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        logger.exception("Failed to ensure tests dir exists")
+
+    # Update job file (if exists)
+    try:
+        job = {}
+        job_file = _job_file_path(job_id)
+        if job_file.exists():
+            try:
+                job = json.loads(job_file.read_text(encoding="utf-8"))
+            except Exception:
+                job = {"job_id": job_id}
+        else:
+            job = {"job_id": job_id}
+
+        job["rl_metrics"] = metrics
+        _write_job(job_id, job)
+    except Exception:
+        logger.exception("[save_rl_metrics] failed to update job file for %s", job_id)
+
+    # Write standalone metrics file
+    try:
+        metrics_file = tests_dir / f"rl_metrics_{job_id}.json"
+        metrics_file.write_text(json.dumps(metrics, default=str, indent=2), encoding="utf-8")
+    except Exception:
+        logger.exception("[save_rl_metrics] failed to write metrics file for %s", job_id)
+
+
+# -------------------------
+# RL metrics endpoints
+# -------------------------
+@router.get("/rl-metrics/{job_id}")
+def rl_metrics(job_id: str):
+    """
+    Return RL training/eval metrics for a job. If metrics not available yet,
+    return an empty-but-200 placeholder so the frontend does not 404.
+    """
+    job = _read_job(job_id)
+
+    metrics = job.get("rl_metrics")
+    if metrics and isinstance(metrics, dict):
+        return {
+            "job_id": job_id,
+            "timesteps": metrics.get("timesteps", []),
+            "rewards": metrics.get("rewards", []),
+            "loss": metrics.get("loss", []),
+            "status": job.get("status", "unknown"),
+            **{k: v for k, v in metrics.items() if k not in ("timesteps", "rewards", "loss")},
+        }
+
+    metrics_file = Path(settings.TESTS_DIR) / f"rl_metrics_{job_id}.json"
+    if metrics_file.exists():
+        try:
+            m = json.loads(metrics_file.read_text(encoding="utf-8"))
+            return {
+                "job_id": job_id,
+                "timesteps": m.get("timesteps", []),
+                "rewards": m.get("rewards", []),
+                "loss": m.get("loss", []),
+                "status": job.get("status", "unknown"),
+                **{k: v for k, v in m.items() if k not in ("timesteps", "rewards", "loss")},
+            }
+        except Exception:
+            logger.exception("[rl_metrics] failed to read metrics file for %s", job_id)
+
+    return {
         "job_id": job_id,
-        "runner": "pytest",
-        "exit_code": exit_code,
-        "log_path": str(log_path),
-        "log_snippet": text[-4000:],
-        "duration": time.time() - start,
-        "ran_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "timesteps": [],
+        "rewards": [],
+        "loss": [],
+        "status": job.get("status", "unknown"),
     }
-    _write_summary(job_id, summary)
-    return summary
 
 
-def run_tests_auto(path_or_dir: str, job_id: str) -> Dict[str, Any]:
+@router.post("/rl-metrics/{job_id}", status_code=201)
+def post_rl_metrics(job_id: str, metrics: Dict[str, Any]):
     """
-    Auto-detect and run tests:
-    - If a Postman collection JSON exists: run newman
-    - Else if pytest tests present: run pytest
-    - Else: return error dict
+    Dev helper: POST metrics to persist them for testing charts.
     """
-    p = Path(path_or_dir)
-    if not p.exists():
-        summary = {"job_id": job_id, "error": f"path not found: {path_or_dir}"}
-        _write_summary(job_id, summary)
-        return summary
+    try:
+        save_rl_metrics(job_id, metrics)
+        return {"job_id": job_id, "saved": True}
+    except Exception as exc:
+        logger.exception("Failed to save metrics for %s", job_id)
+        raise HTTPException(status_code=500, detail=f"Failed to save metrics: {exc}")
 
-    # detect collection.json
-    if p.is_file() and p.suffix.lower() == ".json" and "collection" in p.name.lower():
-        return run_newman_for_job(str(p), job_id)
-    if p.is_dir():
-        # check for collection in dir
-        coll = next(p.glob("**/*collection*.json"), None)
-        if coll:
-            return run_newman_for_job(str(coll), job_id)
-        # check for pytest tests
-        tests = list(p.glob("**/test_*.py"))
-        if tests:
-            return run_pytest_for_dir(str(p), job_id)
-    # nothing found
-    summary = {"job_id": job_id, "error": "No test artifacts found (collection.json or pytest test_*.py)", "path": str(p)}
-    _write_summary(job_id, summary)
-    return summary
+
+# -------------------------
+# Existing endpoints (generate-tests, run-tests, test-result)
+# -------------------------
+@router.post("/generate-tests/{job_id}")
+def generate_tests(job_id: str):
+    """
+    Enrich the OpenAPI stub (if available) using LLM and produce initial test artifacts.
+    Produces:
+      - enriched openapi JSON in tests dir
+      - minimal Postman collection.json placeholder
+    """
+    job = _read_job(job_id)
+
+    # locate scan report or sample_openapi
+    scan_report_path = job.get("scan_report_path")
+    sample_stub = None
+    if scan_report_path:
+        rpt = Path(scan_report_path)
+        if rpt.exists():
+            try:
+                scan_report = json.loads(rpt.read_text(encoding="utf-8"))
+                sample_stub = scan_report.get("sample_openapi")
+            except Exception:
+                logger.exception("Failed to parse existing scan_report for %s", job_id)
+                sample_stub = None
+
+    # if no scan_report found, try to run scanner quickly (best-effort)
+    if not sample_stub and "extracted_path" in job:
+        try:
+            from backend.scanner.project_scanner import scan_project  # local import to avoid top-level failures
+            scan_report = scan_project(job["extracted_path"], job_id=job_id)
+            sample_stub = scan_report.get("sample_openapi")
+            # write scan report to disk
+            report_path = Path(settings.SCANS_DIR) / f"scan_report_{job_id}.json"
+            report_path.write_text(json.dumps(scan_report, indent=2, default=str), encoding="utf-8")
+            job.update({"scan_report_path": str(report_path)})
+            _write_job(job_id, job)
+        except Exception:
+            logger.exception("Scanner quick-run failed for job %s", job_id)
+            sample_stub = None
+
+    if not sample_stub:
+        # fallback: create a trivial stub
+        sample_stub = {"openapi": "3.0.0", "info": {"title": "fallback", "version": "0.1.0"}, "paths": {}}
+
+    # Call synthesizer to enrich (if available)
+    enriched = sample_stub
+    if synthesize_openapi:
+        try:
+            enriched = synthesize_openapi({"sample_openapi": sample_stub, "frontend_calls": job.get("frontend_calls", [])}, job_id=job_id)
+        except Exception as exc:
+            logger.exception("Synthesizer error for job %s: %s", job_id, exc)
+            job.setdefault("synthesizer", {})
+            job["synthesizer"].update({"status": "error", "error": str(exc)})
+            _write_job(job_id, job)
+
+    # Save enriched OpenAPI to tests dir
+    tests_job_dir = Path(settings.TESTS_DIR) / job_id
+    tests_job_dir.mkdir(parents=True, exist_ok=True)
+    openapi_path = tests_job_dir / "openapi_enriched.json"
+    openapi_path.write_text(json.dumps(enriched, indent=2, default=str), encoding="utf-8")
+
+    # Produce a minimal Postman collection.json as a placeholder
+    collection = {
+        "info": {"name": f"auto-generated-collection-{job_id}", "_postman_id": job_id, "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"},
+        "item": []
+    }
+    for path, methods in enriched.get("paths", {}).items():
+        for method, meta in methods.items():
+            item = {
+                "name": f"{method.upper()} {path}",
+                "request": {
+                    "method": method.upper(),
+                    "header": [],
+                    "body": {"mode": "raw", "raw": ""},
+                    "url": {"raw": path, "path": path.strip("/").split("/")}
+                },
+                "response": []
+            }
+            collection["item"].append(item)
+
+    collection_path = tests_job_dir / "collection.json"
+    collection_path.write_text(json.dumps(collection, indent=2), encoding="utf-8")
+
+    # update job record
+    job.update({
+        "status": "tests_generated",
+        "tests_dir": str(tests_job_dir),
+        "openapi_artifact": str(openapi_path),
+        "collection_path": str(collection_path),
+        "tests_generated_at": datetime.utcnow().isoformat(),
+    })
+    _write_job(job_id, job)
+
+    return {"job_id": job_id, "status": "tests_generated", "tests_dir": str(tests_job_dir)}
+
+
+@router.post("/run-tests/{job_id}")
+def run_tests(job_id: str, background_tasks: BackgroundTasks):
+    """
+    Run tests for a given job in background.
+    Uses tests folder produced by generate-tests (or any detected tests).
+    """
+    job = _read_job(job_id)
+
+    tests_dir = job.get("tests_dir") or job.get("collection_path") or job.get("saved_path")
+    if not tests_dir:
+        raise HTTPException(status_code=400, detail="No tests available for this job. Run /generate-tests/{job_id} first.")
+
+    if runner_fn is None:
+        # provide a helpful error message and record to job file
+        err = "Test runner not available. Ensure backend.test_executor.test_runner exists and exposes execute_tests_for_job or run_tests_auto."
+        logger.error(err)
+        job.update({"status": "tests_error", "tests_error": err, "tests_started_at": datetime.utcnow().isoformat()})
+        _write_job(job_id, job)
+        raise HTTPException(status_code=500, detail=err)
+
+    # update job status
+    job.update({"status": "tests_running", "tests_started_at": datetime.utcnow().isoformat()})
+    _write_job(job_id, job)
+
+    def _runner(path: str, jid: str):
+        try:
+            # runner_fn may be execute_tests_for_job(path, job_id) or run_tests_auto(path, job_id)
+            summary = runner_fn(path, jid)
+            # write summary into job
+            current = _read_job(jid)
+            current.update({
+                "status": "tests_completed" if summary.get("exit_code", 1) == 0 else "tests_failed",
+                "last_test_summary": summary,
+                "tests_completed_at": datetime.utcnow().isoformat(),
+            })
+            _write_job(jid, current)
+        except Exception as exc:
+            logger.exception("[run_tests._runner] tests failed for job %s", jid)
+            try:
+                cur = _read_job(jid)
+                cur.update({
+                    "status": "tests_error",
+                    "tests_error": str(exc),
+                    "tests_completed_at": datetime.utcnow().isoformat(),
+                })
+                _write_job(jid, cur)
+            except Exception:
+                logger.exception("Failed to write job error record for %s", jid)
+
+    background_tasks.add_task(_runner, tests_dir if isinstance(tests_dir, str) else str(tests_dir), job_id)
+    return {"job_id": job_id, "status": "tests_running", "message": "Tests started in background. Poll /api/test-result/{job_id}."}
+
+
+@router.get("/test-result/{job_id}")
+def test_result(job_id: str):
+    """
+    Fetch the latest test summary for the job (if any).
+    """
+    job = _read_job(job_id)
+    summary = job.get("last_test_summary")
+    if not summary:
+        # try to read saved test run report file
+        test_report_file = Path(settings.TESTS_DIR) / f"test_run_{job_id}.json"
+        if test_report_file.exists():
+            try:
+                summary = json.loads(test_report_file.read_text(encoding="utf-8"))
+            except Exception:
+                summary = {"error": "failed to read test run report file."}
+        else:
+            return {"job_id": job_id, "status": job.get("status"), "message": "No test run summary available yet."}
+    return {"job_id": job_id, "status": job.get("status"), "summary": summary}

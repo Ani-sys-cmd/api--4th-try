@@ -1,0 +1,189 @@
+{
+  "job_id": "071d1f5a1e3a",
+  "scanned_at": "2025-11-10T12:54:41.183438",
+  "scanned_path": "data\\uploads\\071d1f5a1e3a_clone",
+  "detected_frameworks": [
+    "express",
+    "react"
+  ],
+  "backend_endpoints": [
+    {
+      "method": "POST",
+      "path": "/forgotPassword",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\forgotPassword.js"
+    },
+    {
+      "method": "POST",
+      "path": "/resetPassword",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\forgotPassword.js"
+    },
+    {
+      "method": "POST",
+      "path": "/addTask",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\taskRoute.js"
+    },
+    {
+      "method": "GET",
+      "path": "/getTask",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\taskRoute.js"
+    },
+    {
+      "method": "GET",
+      "path": "/removeTask",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\taskRoute.js"
+    },
+    {
+      "method": "POST",
+      "path": "/login",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\userRoute.js"
+    },
+    {
+      "method": "POST",
+      "path": "/register",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\userRoute.js"
+    },
+    {
+      "method": "GET",
+      "path": "/getuser",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\userRoute.js"
+    }
+  ],
+  "frontend_calls": [
+    {
+      "type": "axios",
+      "method": "GET",
+      "url": "/user/getUser",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\frontend\\src\\App.js"
+    },
+    {
+      "type": "axios",
+      "method": "GET",
+      "url": "/task/getTask",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\frontend\\src\\App.js"
+    },
+    {
+      "type": "axios",
+      "method": "POST",
+      "url": "/user/login",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\frontend\\src\\components\\Login.jsx"
+    },
+    {
+      "type": "axios",
+      "method": "POST",
+      "url": "/user/register",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\frontend\\src\\components\\Register.jsx"
+    },
+    {
+      "type": "axios",
+      "method": "POST",
+      "url": "/task/addTask",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\frontend\\src\\components\\createTask\\CreateTask.jsx"
+    },
+    {
+      "type": "axios",
+      "method": "POST",
+      "url": "/forgotPassword/forgotPassword",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\frontend\\src\\components\\forgotPassword\\ForgotPassword.jsx"
+    },
+    {
+      "type": "axios",
+      "method": "POST",
+      "url": "/forgotPassword/resetPassword",
+      "source_file": "data\\uploads\\071d1f5a1e3a_clone\\frontend\\src\\components\\forgotPassword\\ResetPassword.jsx"
+    }
+  ],
+  "notes": [
+    "Detected git url; cloning into data\\uploads\\071d1f5a1e3a_clone",
+    "Entry file candidates: server.js"
+  ],
+  "file_count": 92,
+  "sample_openapi": {
+    "openapi": "3.0.0",
+    "info": {
+      "title": "synthesized-api",
+      "version": "0.1.0"
+    },
+    "paths": {
+      "/forgotPassword": {
+        "post": {
+          "summary": "Discovered endpoint from data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\forgotPassword.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/resetPassword": {
+        "post": {
+          "summary": "Discovered endpoint from data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\forgotPassword.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/addTask": {
+        "post": {
+          "summary": "Discovered endpoint from data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\taskRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/getTask": {
+        "get": {
+          "summary": "Discovered endpoint from data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\taskRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/removeTask": {
+        "get": {
+          "summary": "Discovered endpoint from data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\taskRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/login": {
+        "post": {
+          "summary": "Discovered endpoint from data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\userRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/register": {
+        "post": {
+          "summary": "Discovered endpoint from data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\userRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/getuser": {
+        "get": {
+          "summary": "Discovered endpoint from data\\uploads\\071d1f5a1e3a_clone\\backend\\routes\\userRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      }
+    }
+  }
+}

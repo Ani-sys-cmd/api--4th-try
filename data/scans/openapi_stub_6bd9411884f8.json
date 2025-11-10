@@ -1,0 +1,89 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "synthesized-api",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/forgotPassword": {
+      "post": {
+        "summary": "Discovered endpoint from data\\uploads\\6bd9411884f8_clone\\backend\\routes\\forgotPassword.js",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/resetPassword": {
+      "post": {
+        "summary": "Discovered endpoint from data\\uploads\\6bd9411884f8_clone\\backend\\routes\\forgotPassword.js",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/addTask": {
+      "post": {
+        "summary": "Discovered endpoint from data\\uploads\\6bd9411884f8_clone\\backend\\routes\\taskRoute.js",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/getTask": {
+      "get": {
+        "summary": "Discovered endpoint from data\\uploads\\6bd9411884f8_clone\\backend\\routes\\taskRoute.js",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/removeTask": {
+      "get": {
+        "summary": "Discovered endpoint from data\\uploads\\6bd9411884f8_clone\\backend\\routes\\taskRoute.js",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Discovered endpoint from data\\uploads\\6bd9411884f8_clone\\backend\\routes\\userRoute.js",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "summary": "Discovered endpoint from data\\uploads\\6bd9411884f8_clone\\backend\\routes\\userRoute.js",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/getuser": {
+      "get": {
+        "summary": "Discovered endpoint from data\\uploads\\6bd9411884f8_clone\\backend\\routes\\userRoute.js",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}

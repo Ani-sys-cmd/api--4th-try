@@ -1,0 +1,153 @@
+{
+  "info": {
+    "name": "auto-generated-collection-6bd9411884f8",
+    "_postman_id": "6bd9411884f8",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "POST /forgotPassword",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "/forgotPassword",
+          "path": [
+            "forgotPassword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST /resetPassword",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "/resetPassword",
+          "path": [
+            "resetPassword"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST /addTask",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "/addTask",
+          "path": [
+            "addTask"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET /getTask",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "/getTask",
+          "path": [
+            "getTask"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET /removeTask",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "/removeTask",
+          "path": [
+            "removeTask"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST /login",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "/login",
+          "path": [
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST /register",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "/register",
+          "path": [
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET /getuser",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "/getuser",
+          "path": [
+            "getuser"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

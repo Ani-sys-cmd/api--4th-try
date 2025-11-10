@@ -1,0 +1,96 @@
+{
+  "sample_openapi": {
+    "openapi": "3.0.0",
+    "info": {
+      "title": "synthesized-api",
+      "version": "0.1.0"
+    },
+    "paths": {
+      "/forgotPassword": {
+        "post": {
+          "summary": "Discovered endpoint from data\\uploads\\1edbea4d5ed7_clone\\backend\\routes\\forgotPassword.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/resetPassword": {
+        "post": {
+          "summary": "Discovered endpoint from data\\uploads\\1edbea4d5ed7_clone\\backend\\routes\\forgotPassword.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/addTask": {
+        "post": {
+          "summary": "Discovered endpoint from data\\uploads\\1edbea4d5ed7_clone\\backend\\routes\\taskRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/getTask": {
+        "get": {
+          "summary": "Discovered endpoint from data\\uploads\\1edbea4d5ed7_clone\\backend\\routes\\taskRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/removeTask": {
+        "get": {
+          "summary": "Discovered endpoint from data\\uploads\\1edbea4d5ed7_clone\\backend\\routes\\taskRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/login": {
+        "post": {
+          "summary": "Discovered endpoint from data\\uploads\\1edbea4d5ed7_clone\\backend\\routes\\userRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/register": {
+        "post": {
+          "summary": "Discovered endpoint from data\\uploads\\1edbea4d5ed7_clone\\backend\\routes\\userRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/getuser": {
+        "get": {
+          "summary": "Discovered endpoint from data\\uploads\\1edbea4d5ed7_clone\\backend\\routes\\userRoute.js",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      }
+    }
+  },
+  "frontend_calls": [],
+  "synthesizer": {
+    "status": "enrichment_failed",
+    "error": "No supported GenAI text-generation signature succeeded. Last error: 18 validation errors for _GenerateContentParameters\ncontents.Content\n  Input should be a valid dictionary or object to extract fields from [type=model_attributes_type, input_value=[{'type': 'text', 'text':...d OpenAPI JSON now.\\n'}], input_type=list]\n    For further information visit https://errors.pydantic.dev/2.9/v/model_attributes_type\ncontents.str\n  Input should be a valid string [type=string_type, input_value=[{'type': 'text', 'text':...d OpenAPI JSON now.\\n'}], input_type=list]\n    For further information visit https://errors.pydantic.dev/2.9/v/string_type\ncontents.is-instance[Image]\n  Input should be an instance of Image [type=is_instance_of, input_value=[{'type': 'text', 'text':...d OpenAPI JSON now.\\n'}], input_type=list]\n    For further information visit https://errors.pydantic.dev/2.9/v/is_instance_of\ncontents.File\n  Input should be a valid dictionary or object to extract fields from [type=model_attributes_type, input_value=[{'type': 'text', 'text':...d OpenAPI JSON now.\\n'}], input_type=list]\n    For further information visit https://errors.pydantic.dev/2.9/v/model_attributes_type\ncontents.Part\n  Input should be a valid dictionary or object to extract fields from [type=model_attributes_type, input_value=[{'type': 'text', 'text':...d OpenAPI JSON now.\\n'}], input_type=list]\n    For further information visit https://errors.pydantic.dev/2.9/v/model_attributes_type\ncontents.list[union[str,is-instance[Image],File,Part]].0.str\n  Input should be a valid string [type=string_type, input_value={'type': 'text', 'text': ...ed OpenAPI JSON now.\\n'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.9/v/string_type\ncontents.list[union[str,is-instance[Image],File,Part]].0.is-instance[Image]\n  Input should be an instance of Image [type=is_instance_of, input_value={'type': 'text', 'text': ...ed OpenAPI JSON now.\\n'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.9/v/is_instance_of\ncontents.list[union[str,is-instance[Image],File,Part]].0.File.type\n  Extra inputs are not permitted [type=extra_forbidden, input_value='text', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.9/v/extra_forbidden\ncontents.list[union[str,is-instance[Image],File,Part]].0.File.text\n  Extra inputs are not permitted [type=extra_forbidden, input_value='\\nYou are an expert engi...hed OpenAPI JSON now.\\n', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.9/v/extra_forbidden\ncontents.list[union[str,is-instance[Image],File,Part]].0.Part.type\n  Extra inputs are not permitted [type=extra_forbidden, input_value='text', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.9/v/extra_forbidden\ncontents.list[union[Content,str,is-instance[Image],File,Part,list[union[str,is-instance[Image],File,Part]]]].0.Content.type\n  Extra inputs are not permitted [type=extra_forbidden, input_value='text', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.9/v/extra_forbidden\ncontents.list[union[Content,str,is-instance[Image],File,Part,list[union[str,is-instance[Image],File,Part]]]].0.Content.text\n  Extra inputs are not permitted [type=extra_forbidden, input_value='\\nYou are an expert engi...hed OpenAPI JSON now.\\n', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.9/v/extra_forbidden\ncontents.list[union[Content,str,is-instance[Image],File,Part,list[union[str,is-instance[Image],File,Part]]]].0.str\n  Input should be a valid string [type=string_type, input_value={'type': 'text', 'text': ...ed OpenAPI JSON now.\\n'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.9/v/string_type\ncontents.list[union[Content,str,is-instance[Image],File,Part,list[union[str,is-instance[Image],File,Part]]]].0.is-instance[Image]\n  Input should be an instance of Image [type=is_instance_of, input_value={'type': 'text', 'text': ...ed OpenAPI JSON now.\\n'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.9/v/is_instance_of\ncontents.list[union[Content,str,is-instance[Image],File,Part,list[union[str,is-instance[Image],File,Part]]]].0.File.type\n  Extra inputs are not permitted [type=extra_forbidden, input_value='text', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.9/v/extra_forbidden\ncontents.list[union[Content,str,is-instance[Image],File,Part,list[union[str,is-instance[Image],File,Part]]]].0.File.text\n  Extra inputs are not permitted [type=extra_forbidden, input_value='\\nYou are an expert engi...hed OpenAPI JSON now.\\n', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.9/v/extra_forbidden\ncontents.list[union[Content,str,is-instance[Image],File,Part,list[union[str,is-instance[Image],File,Part]]]].0.Part.type\n  Extra inputs are not permitted [type=extra_forbidden, input_value='text', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.9/v/extra_forbidden\ncontents.list[union[Content,str,is-instance[Image],File,Part,list[union[str,is-instance[Image],File,Part]]]].0.list[union[str,is-instance[Image],File,Part]]\n  Input should be a valid list [type=list_type, input_value={'type': 'text', 'text': ...ed OpenAPI JSON now.\\n'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.9/v/list_type For local dev either ensure google-genai is installed or adapt this wrapper."
+  }
+}

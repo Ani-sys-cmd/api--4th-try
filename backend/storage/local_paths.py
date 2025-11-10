@@ -13,7 +13,7 @@ Used by:
 """
 
 from pathlib import Path
-from config import settings
+from backend.config import settings
 
 
 class LocalPaths:
@@ -82,3 +82,4 @@ class LocalPaths:
         """Return path for the RL metrics log file."""
         path = LocalPaths.models() / "policies" / f"metrics_{job_id}.jsonl"
         return path
+

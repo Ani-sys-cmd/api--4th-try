@@ -19,7 +19,7 @@ import json
 import time
 from typing import Optional, Dict, Any
 
-from config import settings
+from backend.config import settings
 
 
 class NewmanError(RuntimeError):
@@ -174,3 +174,4 @@ def parse_newman_metrics(parsed_run: Dict[str, Any]) -> Dict[str, Any]:
     metrics["failures"] = failures
     metrics["total_response_time_ms"] = total_resp_time
     return metrics
+

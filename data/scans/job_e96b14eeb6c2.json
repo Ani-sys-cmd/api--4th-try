@@ -1,0 +1,20 @@
+{
+  "job_id": "e96b14eeb6c2",
+  "project_name": "https://github.com/alokyadav1/mern-todo-app",
+  "created_at": "2025-11-10T11:55:24.528842",
+  "status": "heal_failed",
+  "source": "git",
+  "file_name": null,
+  "git_url": "https://github.com/alokyadav1/mern-todo-app",
+  "note": "git clone scheduled in scanner step; scanner will clone and process the repo.",
+  "scan_started_at": "2025-11-10T11:55:48.440048",
+  "tests_dir": "data\\tests\\e96b14eeb6c2",
+  "openapi_artifact": "data\\tests\\e96b14eeb6c2\\openapi_enriched.json",
+  "collection_path": "data\\tests\\e96b14eeb6c2\\collection.json",
+  "tests_generated_at": "2025-11-10T11:55:50.576075",
+  "scan_completed_at": "2025-11-10T11:55:51.382257",
+  "scan_report_path": "data\\scans\\scan_report_e96b14eeb6c2.json",
+  "healing_started_at": "2025-11-10T11:56:17.577416",
+  "heal_error": "'\"key\"'",
+  "healing_completed_at": "2025-11-10T11:56:17.644540"
+}
